@@ -60,7 +60,8 @@ public class CDVBroadcaster extends CordovaPlugin {
      * @param filter
      */
     protected void registerReceiver(android.content.BroadcastReceiver receiver, android.content.IntentFilter filter) {
-        LocalBroadcastManager.getInstance(super.webView.getContext()).registerReceiver(receiver,filter);
+        // LocalBroadcastManager.getInstance(super.webView.getContext()).registerReceiver(receiver,filter);
+        this.webView.getContext().registerReceiver(receiver, filter);
     }
 
     /**
@@ -68,7 +69,8 @@ public class CDVBroadcaster extends CordovaPlugin {
      * @param receiver
      */
     protected void unregisterReceiver(android.content.BroadcastReceiver receiver) {
-        LocalBroadcastManager.getInstance(super.webView.getContext()).unregisterReceiver(receiver);
+        // LocalBroadcastManager.getInstance(super.webView.getContext()).unregisterReceiver(receiver);
+        this.webView.getContext().unregisterReceiver(receiver);
     }
 
     /**
@@ -107,6 +109,18 @@ public class CDVBroadcaster extends CordovaPlugin {
         sendBroadcast( intent );
     }
 
+    private void sendGlobalBroadcast(final String eventName, final String actionName, JSONObject userData) {
+        if( eventName == null ) {
+            throw new IllegalArgumentException("eventName parameter is null!");
+        }
+
+        final Intent intent = new Intent(eventName)
+                .setAction(actionName)
+                .putExtras(toBundle(new Bundle(), userData));
+
+        this.webView.getContext().sendBroadcast(intent);
+    }
+
     /**
      *
      * @param action          The action to execute.
@@ -131,6 +145,24 @@ public class CDVBroadcaster extends CordovaPlugin {
                 @Override
                 public void run() {
                     fireNativeEvent(eventName, userData);
+                }
+            });
+
+            callbackContext.success();
+            return true;
+        }
+        else if (action.equals("sendGlobalBroadcast")) {
+            final String eventName = args.getString(0);
+            if( eventName==null || eventName.isEmpty() ) {
+                callbackContext.error(EVENTNAME_ERROR);
+            }
+            final String actionName = args.getString(1);
+            final JSONObject userData = args.getJSONObject(2);
+
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    sendGlobalBroadcast(eventName, actionName, userData);
                 }
             });
 

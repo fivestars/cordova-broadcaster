@@ -43,6 +43,10 @@ Broadcaster.prototype.fireNativeEvent = function(eventname, data, success, error
      exec(success, error, "broadcaster", "fireNativeEvent", [ eventname, data ]);
 }
 
+Broadcaster.prototype.sendGlobalBroadcast = function(eventname, actionname, data, success, error) {
+     exec(success, error, "broadcaster", "sendGlobalBroadcast", [eventname, actionname, data])
+}
+
 Broadcaster.prototype.fireEvent = function(type, data) {
   if( !this.channelExists(type) ) return;
 
