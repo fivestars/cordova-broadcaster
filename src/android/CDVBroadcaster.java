@@ -114,6 +114,9 @@ public class CDVBroadcaster extends CordovaPlugin {
             throw new IllegalArgumentException("eventName parameter is null!");
         }
 
+        Log.w("eventName: ", eventName);
+        Log.w("actionName: ", actionName);
+
         final Intent intent = new Intent(eventName)
                 .setAction(actionName)
                 .putExtras(toBundle(new Bundle(), userData));
