@@ -109,7 +109,7 @@ public class CDVBroadcaster extends CordovaPlugin {
         sendBroadcast( intent );
     }
 
-    private void sendGlobalBroadcast(final String eventName, final String actionName, JSONObject userData) {
+    private String sendGlobalBroadcast(final String eventName, final String actionName, JSONObject userData) {
         if( eventName == null ) {
             throw new IllegalArgumentException("eventName parameter is null!");
         }
@@ -122,6 +122,7 @@ public class CDVBroadcaster extends CordovaPlugin {
                 .putExtras(toBundle(new Bundle(), userData));
 
         this.webView.getContext().sendBroadcast(intent);
+        return intent.toString();
     }
 
     /**
