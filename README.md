@@ -1,6 +1,6 @@
 # Cordova Broadcaster
 
-Cordova Plugin to allow message exchange between javascript and native (and viceversa).
+Cordova Plugin to allow global message exchange between javascript and native (and viceversa). Based (forked off of) on [bsorrentino's cordova broadcaster](https://github.com/bsorrentino/cordova-broadcaster)
 
 [![npm](https://img.shields.io/npm/v/cordova-plugin-broadcaster.svg)](https://www.npmjs.com/package/cordova-plugin-broadcaster) [![Join the chat at https://gitter.im/bsorrentino/cordova-broadcaster](https://badges.gitter.im/bsorrentino/cordova-broadcaster.svg)](https://gitter.im/bsorrentino/cordova-broadcaster?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -14,26 +14,62 @@ Broadcaster plugin providing bridge for the following native technologies:
  IOS | **[NotificationCenter](https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSNotificationCenter_Class/index.html#//apple_ref/occ/instm/NSNotificationCenter/addObserverForName%3aobject%3aqueue%3ausingBlock%3a)**
 Android | **[LocalBroadcastManager](http://developer.android.com/reference/android/support/v4/content/LocalBroadcastManager.html)**
 
-## News
-  date |  infos | refs
----- | ---- | ----
-Jan 16, 2018 | I've developed a complete **ionic3** sample project using **broadcaster** | [ionic-broadcaster-sample](https://github.com/bsorrentino/ionic-broadcaster-sample)
-Jan 28, 2017 | such plugin has been added to [ionic-native](https://ionicframework.com/docs/v2/native/broadcaster/) distribution | **How to** is available   [here](https://ionicframework.com/docs/v2/native/broadcaster/)
-
-
-
-## Installation
-
-```javascript
-$ cordova create <PATH> [ID [NAME [CONFIG]]] [options]
-$ cd <PATH>
-$ cordova platform add [ios|android]
-$ cordova plugin add cordova-plugin-broadcaster
-```
-
 ## Usage:
 
-### From Native to Javascript
+### From Native to Javascript (global broadcast)
+
+#### Javascript
+```javascript
+window.broadcaster.addEventListener(“INTENT_NAME”, sample_func)
+var sample_func = function (intent_extras) {
+  var sample_extra = intent_extras['EXAMPLE_KEY'];
+  console.log(sample_extra); // "EXAMPLE_DATA"
+}
+```
+
+#### ANDROID
+
+```Java
+val sample_intent = Intent(“INTENT_NAME”)
+sample_intent.putExtra("EXAMPLE_KEY", "EXAMPLE_DATA")
+applicationContext.sendBroadcast(sample_intent)
+```
+
+### From Javascript to Native (global broadcast)
+
+#### Javascript
+
+```javascript
+window.broadcaster.sendGlobalBroadcast(“INTENT_NAME”, “INTENT_ACTION”, {“example_key”: “example_data”})
+ ```
+
+#### ANDROID
+
+```Java
+// First create an inner class (non-static) that can be registered dynamically in the code.
+// (non-static -> register dynamically programmatically; static -> register in manifest)
+inner class MTabBroadcastReceiver : BroadcastReceiver() {
+  override fun onReceive(context: Context?, intent: Intent?) {
+  // TO GET INTENT_EXTRAS
+  val extra = intent?.extras.get(“example_key”) // “example_data”
+    when (intent?.action) {
+      “INTENT_ACTION” -> {}
+      else -> {}
+    }
+  }
+}
+
+// Then, register the receiver in onCreate() or onServiceConnected()
+mtabReceiver = MTabBroadcastReceiver()
+val mtabIntent = IntentFilter(“INTENT_NAME”) // must match or else it won’t be received
+mtabIntent.addAction(“INTENT_ACTION”) // must match or else it won’t be received
+registerReceiver(mtabReceiver, mtabIntent)
+
+// Remember to unregister the receiver in onDestroy() to prevent a leak
+unregister(mtabReceiver)
+```
+
+### From Native to Javascript (locally)
 
 #### Javascript
 ```javascript
@@ -82,7 +118,7 @@ let event = new CustomEvent("didShow", { detail: { data:"test"} } );
 document.dispatchEvent( event )
 
 ```
-### From Javascript to Native
+### From Javascript to Native (locally)
 
 #### Javascript
 
