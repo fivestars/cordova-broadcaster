@@ -68,3 +68,115 @@ registerReceiver(mtabReceiver, mtabIntent)
 // Remember to unregister the receiver in onDestroy() to prevent a leak
 unregister(mtabReceiver)
 ```
+
+### From Native to Javascript (locally)
+
+#### Javascript
+```javascript
+    console.log( "register didShow received!" );
+
+    var listener = function( e ) {
+      //log: didShow received! userInfo: {"data":"test"}
+      console.log( "didShow received! userInfo: " + JSON.stringify(e)  );
+    }
+
+    window.broadcaster.addEventListener( "didShow", listener);
+```
+
+#### ANDROID
+
+```Java
+final Intent intent = new Intent("didShow");
+
+Bundle b = new Bundle();
+b.putString( "data", "test" );
+intent.putExtras( b);
+
+LocalBroadcastManager.getInstance(this).sendBroadcastSync(intent);
+```
+
+#### IOS
+
+##### Objective-C
+```Objective-C
+[[NSNotificationCenter defaultCenter] postNotificationName:@"didShow"
+                                                    object:nil
+                                                  userInfo:@{ @"data":@"test"}];
+```
+
+##### Swift
+```swift
+let nc = NSNotificationCenter.default
+nc.post(name:"didShow", object: nil, userInfo: ["data":"test"])
+```
+
+#### BROWSER
+
+```javascript
+
+let event = new CustomEvent("didShow", { detail: { data:"test"} } );
+document.dispatchEvent( event )
+
+```
+### From Javascript to Native (locally)
+
+#### Javascript
+
+```javascript
+  window.broadcaster.fireNativeEvent( "test.event", { item:'test data' }, function() {
+    console.log( "event fired!" );
+    } );
+ ```
+
+#### ANDROID
+
+```Java
+final BroadcastReceiver receiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String data = intent.getExtras().getString("data");
+
+        Log.d("CDVBroadcaster",
+                String.format("Native event [%s] received with data [%s]", intent.getAction(), data));
+
+    }
+};
+
+LocalBroadcastManager.getInstance(this)
+            .registerReceiver(receiver, new IntentFilter("test.event"));
+}
+```
+
+#### IOS
+
+##### Objective-C
+
+```Objective-C
+[[NSNotificationCenter defaultCenter] addObserverForName:@"test.event"
+                                                  object:nil
+                                                   queue:[NSOperationQueue mainQueue]
+                                              usingBlock:^(NSNotification *notification) {
+                                                      NSLog(@"Handled 'test.event' [%@]", notification.userInfo[@"item"]);
+                                                    }];
+```
+
+##### Swift 3.0
+
+```swift
+let nc = NotificationCenter.default
+nc.addObserver(forName:Notification.Name(rawValue:"test.event"),
+               object:nil, queue:nil) {
+  notification in
+  print( "\(notification.userInfo)")
+}
+```
+
+#### BROWSER
+
+```javascript
+
+document.addEventListener( "test.event", ( ev:Event ) => {
+  console.log( "test event", ev.detail );
+});
+
+```
